@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // App currently has no Firebase Auth flow, so rules must allow
+    // client access for category-scoped reads/writes to persist data.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

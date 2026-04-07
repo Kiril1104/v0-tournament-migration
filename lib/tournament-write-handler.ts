@@ -40,6 +40,17 @@ export async function runTournamentWriteOp(db: Firestore, op: string, payload: R
       await ref.set({ id: ref.id, name });
       return;
     }
+    case 'updateGroup': {
+      const categoryId = String(payload.categoryId ?? '');
+      const groupId = String(payload.groupId ?? '');
+      const name = String(payload.name ?? '').trim();
+      if (!categoryId || !groupId || !name) throw new Error('categoryId, groupId and name required');
+      const ref = db.collection('categories').doc(categoryId).collection('groups').doc(groupId);
+      const snap = await ref.get();
+      if (!snap.exists) throw new Error('Group not found');
+      await ref.update({ name });
+      return;
+    }
     case 'addTeam': {
       const categoryId = String(payload.categoryId ?? '');
       const team = payload.team as Record<string, unknown>;

@@ -65,6 +65,7 @@ interface TournamentContextType {
   setAdminWriteSecret: (secret: string | null) => void;
   setCategoryFormat: (format: TournamentFormat) => Promise<void>;
   addGroup: (name: string) => Promise<void>;
+  renameGroup: (groupId: string, name: string) => Promise<void>;
   addTeam: (team: Omit<Team, 'id' | 'played' | 'won' | 'drawn' | 'lost' | 'goalsFor' | 'goalsAgainst' | 'points'>) => Promise<void>;
   addMatch: (match: Omit<Match, 'id'>) => Promise<void>;
   updateMatchScore: (matchId: string, homeScore: number, awayScore: number) => Promise<void>;
@@ -339,7 +340,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     };
 
     unsubscribers.push(onSnapshot(query(collection(db(), 'categories', activeCategory, 'groups'), orderBy('name')), (snapshot) => {
-      setGroups(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Group)));
+      // id документа Firestore має бути канонічним (поле id у data() не повинно його перезаписувати).
+      setGroups(snapshot.docs.map((d) => ({ ...d.data(), id: d.id } as Group)));
       finishLoading();
     }, (error) => {
       logFirestoreSnapshotError(`categories/${activeCategory}/groups`, error);
@@ -347,7 +349,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       finishLoading();
     }));
     unsubscribers.push(onSnapshot(query(collection(db(), 'categories', activeCategory, 'teams')), (snapshot) => {
-      setRawTeams(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Team)));
+      setRawTeams(snapshot.docs.map((d) => ({ ...d.data(), id: d.id } as Team)));
     }, (error) => {
       logFirestoreSnapshotError(`categories/${activeCategory}/teams`, error);
       setFirestoreError(formatListenError('Помилка читання команд', (error as Error).message));
@@ -388,10 +390,24 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     await tournamentWriteOp('addGroup', { categoryId, name: String(name).trim() }, adminWriteSecret);
   }, [ensureActiveCategory, adminWriteSecret]);
 
+  const renameGroup = useCallback(
+    async (groupId: string, name: string) => {
+      const categoryId = ensureActiveCategory();
+      const trimmed = String(name).trim();
+      if (!trimmed) throw new Error('Group name is required.');
+      await tournamentWriteOp('updateGroup', { categoryId, groupId, name: trimmed }, adminWriteSecret);
+    },
+    [ensureActiveCategory, adminWriteSecret],
+  );
+
   const addTeam = useCallback(async (team: Omit<Team, 'id' | 'played' | 'won' | 'drawn' | 'lost' | 'goalsFor' | 'goalsAgainst' | 'points'>) => {
     const categoryId = ensureActiveCategory();
-    if (!groups.some((g) => g.id === team.groupId)) throw new Error('Selected group does not exist.');
-    await tournamentWriteOp('addTeam', { categoryId, team: { name: team.name, groupId: team.groupId } }, adminWriteSecret);
+    const gid = String(team.groupId ?? '').trim();
+    if (!gid) throw new Error('Не вказано групу.');
+    if (groups.length > 0 && !groups.some((g) => g.id === gid)) {
+      throw new Error('Група не знайдена в поточній категорії. Оновіть сторінку або оберіть категорію знову.');
+    }
+    await tournamentWriteOp('addTeam', { categoryId, team: { name: String(team.name).trim(), groupId: gid } }, adminWriteSecret);
   }, [ensureActiveCategory, adminWriteSecret, groups]);
 
   const addMatch = useCallback(async (match: Omit<Match, 'id'>) => {
@@ -572,6 +588,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setAdminWriteSecret,
       setCategoryFormat,
       addGroup,
+      renameGroup,
       addTeam,
       addMatch,
       updateMatchScore,

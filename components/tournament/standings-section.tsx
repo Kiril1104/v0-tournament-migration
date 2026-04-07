@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Plus, Trophy, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trophy, Trash2 } from 'lucide-react';
 import { useTournament } from '@/context/tournament-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,9 +14,13 @@ import { Input } from '@/components/ui/input';
 import type { Group, Team } from '@/types/tournament';
 
 function StandingsTable({ group, teams }: { group: Group; teams: Team[] }) {
-  const { isAdmin, deleteTeam, deleteGroup, addTeam } = useTournament();
+  const { isAdmin, deleteTeam, deleteGroup, addTeam, renameGroup } = useTournament();
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
+  const [addTeamError, setAddTeamError] = useState('');
+  const [showRenameGroup, setShowRenameGroup] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameError, setRenameError] = useState('');
 
   const sortedTeams = [...teams].sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
@@ -26,14 +30,36 @@ function StandingsTable({ group, teams }: { group: Group; teams: Team[] }) {
     return b.goalsFor - a.goalsFor;
   });
 
-  const handleAddTeam = () => {
+  const handleAddTeam = async () => {
     if (!newTeamName.trim()) return;
-    addTeam({
-      name: newTeamName,
-      groupId: group.id,
-    });
-    setNewTeamName('');
-    setShowAddTeam(false);
+    try {
+      setAddTeamError('');
+      await addTeam({
+        name: newTeamName.trim(),
+        groupId: group.id,
+      });
+      setNewTeamName('');
+      setShowAddTeam(false);
+    } catch (e) {
+      setAddTeamError(e instanceof Error ? e.message : 'Не вдалося додати команду.');
+    }
+  };
+
+  const openRenameGroup = () => {
+    setRenameValue(group.name);
+    setRenameError('');
+    setShowRenameGroup(true);
+  };
+
+  const handleRenameGroup = async () => {
+    if (!renameValue.trim()) return;
+    try {
+      setRenameError('');
+      await renameGroup(group.id, renameValue);
+      setShowRenameGroup(false);
+    } catch (e) {
+      setRenameError(e instanceof Error ? e.message : 'Failed to rename group.');
+    }
   };
 
   return (
@@ -47,6 +73,9 @@ function StandingsTable({ group, teams }: { group: Group; teams: Team[] }) {
         </div>
         {isAdmin && (
           <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={openRenameGroup} className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300">
+              <Pencil className="w-3 h-3 mr-1" /> Назва
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setShowAddTeam(true)} className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300">
               <Plus className="w-3 h-3 mr-1" /> Team
             </Button>
@@ -125,21 +154,55 @@ function StandingsTable({ group, teams }: { group: Group; teams: Team[] }) {
         </table>
       </div>
 
-      <Dialog open={showAddTeam} onOpenChange={setShowAddTeam}>
+      <Dialog open={showRenameGroup} onOpenChange={setShowRenameGroup}>
         <DialogContent className="bg-[#0d1f35] border-cyan-500/30">
           <DialogHeader>
-            <DialogTitle className="text-cyan-400">Add Team to {group.name}</DialogTitle>
+            <DialogTitle className="text-cyan-400">Назва групи</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Input
-              placeholder="Team name"
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
+              placeholder="Нова назва групи"
+              value={renameValue}
+              onChange={(e) => {
+                setRenameValue(e.target.value);
+                setRenameError('');
+              }}
               className="bg-[#0a1628] border-cyan-500/30 text-white placeholder:text-gray-500"
             />
+            {renameError && <p className="text-red-400 text-sm">{renameError}</p>}
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowAddTeam(false)} className="border-cyan-500/30 text-gray-400 hover:text-white">Cancel</Button>
-              <Button onClick={handleAddTeam} className="bg-cyan-500 text-[#0a1628] font-bold hover:bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]">Add Team</Button>
+              <Button variant="outline" onClick={() => setShowRenameGroup(false)} className="border-cyan-500/30 text-gray-400 hover:text-white">Скасувати</Button>
+              <Button onClick={() => void handleRenameGroup()} className="bg-cyan-500 text-[#0a1628] font-bold hover:bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]">Зберегти</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showAddTeam}
+        onOpenChange={(open) => {
+          setShowAddTeam(open);
+          if (!open) setAddTeamError('');
+        }}
+      >
+        <DialogContent className="bg-[#0d1f35] border-cyan-500/30">
+          <DialogHeader>
+            <DialogTitle className="text-cyan-400">Команда в «{group.name}»</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Назва команди"
+              value={newTeamName}
+              onChange={(e) => {
+                setNewTeamName(e.target.value);
+                setAddTeamError('');
+              }}
+              className="bg-[#0a1628] border-cyan-500/30 text-white placeholder:text-gray-500"
+            />
+            {addTeamError && <p className="text-red-400 text-sm">{addTeamError}</p>}
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setShowAddTeam(false)} className="border-cyan-500/30 text-gray-400 hover:text-white">Скасувати</Button>
+              <Button type="button" onClick={() => void handleAddTeam()} className="bg-cyan-500 text-[#0a1628] font-bold hover:bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]">Додати</Button>
             </div>
           </div>
         </DialogContent>
@@ -171,8 +234,23 @@ export function StandingsSection() {
       {groups.length === 0 ? (
         <div className="text-center py-16 bg-[#0d1f35]/80 border border-cyan-500/30 rounded-2xl">
           <Trophy className="w-14 h-14 text-cyan-500/50 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg">No groups created yet.</p>
-          {isAdmin && <p className="text-sm text-gray-500 mt-2">Click &quot;Add Group&quot; above to get started.</p>}
+          <p className="text-gray-400 text-lg">Ще немає груп у цій категорії.</p>
+          {isAdmin && (
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  setAddGroupError('');
+                  setNewGroupName('');
+                  setShowAddGroup(true);
+                }}
+                className="bg-cyan-500 text-[#0a1628] font-bold hover:bg-cyan-400"
+              >
+                Додати групу
+              </Button>
+              <p className="text-sm text-gray-500">Або скористайтесь кнопкою «Додати групу» в панелі адміна зверху.</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid gap-6">

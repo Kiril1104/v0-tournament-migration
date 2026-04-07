@@ -66,7 +66,10 @@ export function AdminBar({ activeTab }: AdminBarProps) {
   const [migrationError, setMigrationError] = useState<string>('');
   const [deleteLegacyAfterCopy, setDeleteLegacyAfterCopy] = useState(false);
   const [replaceCategoriesAfterCopy, setReplaceCategoriesAfterCopy] = useState(true);
-  const [quickAddGroupError, setQuickAddGroupError] = useState('');
+  const [showAddGroupDialog, setShowAddGroupDialog] = useState(false);
+  const [addGroupNameInput, setAddGroupNameInput] = useState('');
+  const [addGroupDialogError, setAddGroupDialogError] = useState('');
+  const [addGroupBarHint, setAddGroupBarHint] = useState('');
 
   const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false);
   const [showEditCategoryDialog, setShowEditCategoryDialog] = useState(false);
@@ -215,19 +218,34 @@ export function AdminBar({ activeTab }: AdminBarProps) {
     })();
   };
 
-  const handleAddGroup = () => {
-    deferInteraction(() => {
-      startTransition(() => setQuickAddGroupError(''));
-      const nextLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      const name = `Group ${nextLetter}`;
-      void (async () => {
-        try {
-          await addGroup(name);
-        } catch (e) {
-          setQuickAddGroupError(e instanceof Error ? e.message : 'Failed to add group.');
-        }
-      })();
-    });
+  const openAddGroupDialog = () => {
+    setAddGroupBarHint('');
+    if (!activeCategory) {
+      setAddGroupBarHint('Спочатку оберіть категорію у шапці турніру.');
+      return;
+    }
+    setAddGroupDialogError('');
+    const nextLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    setAddGroupNameInput(`Group ${nextLetter}`);
+    setShowAddGroupDialog(true);
+  };
+
+  const submitAddGroupDialog = () => {
+    const name = addGroupNameInput.trim();
+    if (!name) {
+      setAddGroupDialogError('Введіть назву групи.');
+      return;
+    }
+    void (async () => {
+      try {
+        setAddGroupDialogError('');
+        await addGroup(name);
+        setShowAddGroupDialog(false);
+        setAddGroupNameInput('');
+      } catch (e) {
+        setAddGroupDialogError(e instanceof Error ? e.message : 'Не вдалося додати групу.');
+      }
+    })();
   };
 
   const runImportFile = async (file: File) => {
@@ -301,8 +319,10 @@ export function AdminBar({ activeTab }: AdminBarProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+      <div className="flex flex-col gap-3 mb-6">
+        <div className="flex flex-wrap items-center gap-3">
         <button
+          type="button"
           onClick={handleAdminToggle}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 border ${
             isAdmin
@@ -314,8 +334,21 @@ export function AdminBar({ activeTab }: AdminBarProps) {
           {isAdmin ? 'Admin Mode' : 'Viewer Mode'}
         </button>
 
+        {activeTab === 'standings' && isAdmin && (
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => deferInteraction(() => startTransition(() => openAddGroupDialog()))}
+              className="flex items-center gap-2 bg-cyan-500 text-[#0a1628] px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-400 transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+            >
+              <Plus size={16} /> Додати групу
+            </button>
+            {addGroupBarHint && <p className="text-amber-300 text-xs max-w-[220px]">{addGroupBarHint}</p>}
+          </div>
+        )}
+
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 flex-1 min-w-0 justify-start sm:justify-end">
             <button
               type="button"
               onClick={() =>
@@ -400,19 +433,48 @@ export function AdminBar({ activeTab }: AdminBarProps) {
             </button>
           </div>
         )}
-
-        {activeTab === 'standings' && isAdmin && (
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={handleAddGroup}
-              className="flex items-center gap-2 bg-cyan-500 text-[#0a1628] px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-400 transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
-            >
-              <Plus size={16} /> Add Group
-            </button>
-            {quickAddGroupError && <p className="text-red-400 text-xs">{quickAddGroupError}</p>}
-          </div>
-        )}
+        </div>
       </div>
+
+      <Dialog open={showAddGroupDialog} onOpenChange={setShowAddGroupDialog}>
+        <DialogContent className="bg-[#0d1f35] border-cyan-500/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-cyan-400">Нова група</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Назва збережеться в активній категорії: {activeCategory ? <span className="text-cyan-200 font-medium">{activeCategory}</span> : '—'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Наприклад: Група A"
+              value={addGroupNameInput}
+              onChange={(e) => {
+                setAddGroupNameInput(e.target.value);
+                setAddGroupDialogError('');
+              }}
+              className="bg-[#0a1628] border-cyan-500/30 text-white placeholder:text-gray-500"
+            />
+            {addGroupDialogError && <p className="text-red-400 text-sm">{addGroupDialogError}</p>}
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddGroupDialog(false)}
+                className="border-cyan-500/30 text-gray-400 hover:text-white"
+              >
+                Скасувати
+              </Button>
+              <Button
+                type="button"
+                onClick={submitAddGroupDialog}
+                className="bg-cyan-500 text-[#0a1628] font-bold hover:bg-cyan-400"
+              >
+                Додати
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent className="bg-card border-border">

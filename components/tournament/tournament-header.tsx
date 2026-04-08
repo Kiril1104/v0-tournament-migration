@@ -131,14 +131,11 @@ export function TournamentHeader() {
           </div>
         )}
       </div>
-      {activeCategory && (
-        <div className="mt-3 text-center text-xs text-cyan-200/70">
-          Формат: <span className="font-semibold text-cyan-300">{categoryConfig?.format ?? 'round_robin'}</span>
-          {categoryConfig?.lastImportSummary ? (
-            <span className="ml-3 text-cyan-200/60">Останній імпорт: {categoryConfig.lastImportSummary}</span>
-          ) : null}
+      {activeCategory && categoryConfig?.lastImportSummary ? (
+        <div className="mt-3 text-center text-xs text-cyan-200/60">
+          Останній імпорт: {categoryConfig.lastImportSummary}
         </div>
-      )}
+      ) : null}
 
       <Dialog open={showAddCategoryDialog} onOpenChange={setShowAddCategoryDialog}>
         <DialogContent className="bg-card border-border">

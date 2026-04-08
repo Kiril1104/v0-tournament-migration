@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "firebase:env-one-line": "node scripts/firebase-service-account-one-line.mjs"
+    "firebase:env-one-line": "node scripts/firebase-service-account-one-line.mjs",
+    "gemini:check": "node --env-file=.env.local scripts/gemini-smoke-test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -50,8 +51,10 @@
     "input-otp": "1.4.2",
     "install": "^0.13.0",
     "lucide-react": "^0.564.0",
+    "mammoth": "^1.12.0",
     "next": "16.2.1",
     "next-themes": "^0.4.6",
+    "pdf-parse": "^2.4.5",
     "react": "19.2.4",
     "react-day-picker": "9.13.2",
     "react-dom": "19.2.4",

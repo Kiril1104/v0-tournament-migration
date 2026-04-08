@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, startTransition } from 'react';
-import { Shield, ShieldOff, Lock, Plus, Upload, GitBranch } from 'lucide-react';
+import { Shield, ShieldOff, Lock, Plus, Upload, GitBranch, Sparkles } from 'lucide-react';
 import { useTournament } from '@/context/tournament-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import type { TabId, TournamentImportFileV1 } from '@/types/tournament';
 import * as XLSX from 'xlsx';
+import { ScheduleAiExtractDialog } from '@/components/tournament/schedule-ai-extract-dialog';
 
 /** Double rAF: commit React updates and paint before heavy synchronous work (XLSX, large JSON). */
 function yieldToPaint(): Promise<void> {
@@ -55,6 +56,7 @@ export function AdminBar({ activeTab }: AdminBarProps) {
   const [error, setError] = useState('');
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showAiExtractDialog, setShowAiExtractDialog] = useState(false);
   const [importError, setImportError] = useState<string>('');
   const [importBusy, setImportBusy] = useState(false);
   const [replaceExisting, setReplaceExisting] = useState(true);
@@ -375,6 +377,17 @@ export function AdminBar({ activeTab }: AdminBarProps) {
               type="button"
               onClick={() =>
                 deferInteraction(() => {
+                  startTransition(() => setShowAiExtractDialog(true));
+                })
+              }
+              className="flex items-center gap-2 bg-[#0d1f35] text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-500/10 transition-all duration-300"
+            >
+              <Sparkles size={16} /> AI з тексту
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                deferInteraction(() => {
                   startTransition(() => {
                     setDeleteCategoryError('');
                     setDeleteCategoryBusy(false);
@@ -590,6 +603,14 @@ export function AdminBar({ activeTab }: AdminBarProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ScheduleAiExtractDialog
+        open={showAiExtractDialog}
+        onOpenChange={setShowAiExtractDialog}
+        defaultAgeCategory={activeCategory ?? ''}
+        validateImportTournament={validateImportTournament}
+        importTournament={importTournament}
+      />
 
       <Dialog open={showMigrationDialog} onOpenChange={setShowMigrationDialog}>
         <DialogContent className="bg-card border-border">

@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getGeminiApiKey } from '@/lib/gemini-api-key';
+import { userMessageFromGeminiApiError } from '@/lib/gemini-api-error';
+import { getGeminiModel } from '@/lib/gemini-model';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,14 +37,6 @@ function toGeminiContents(messages: ChatMessage[]) {
   }));
 }
 
-function getGeminiApiKey(): string | undefined {
-  return (
-    process.env.GEMINI_API_KEY?.trim() ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim() ||
-    process.env.GOOGLE_AI_API_KEY?.trim()
-  );
-}
-
 export async function POST(req: Request) {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
@@ -71,7 +66,7 @@ export async function POST(req: Request) {
       ? `\n\nКонтекст з відкритого зараз екрану турніру:\n${body.context.trim().slice(0, 2000)}`
       : '';
 
-  const model = process.env.GEMINI_MODEL?.trim() || 'gemini-2.0-flash';
+  const model = getGeminiModel();
 
   const systemText = SYSTEM_PROMPT + context;
 
@@ -92,7 +87,7 @@ export async function POST(req: Request) {
     });
 
     const data = (await res.json()) as {
-      error?: { message?: string; status?: string };
+      error?: { message?: string; status?: string; code?: number };
       promptFeedback?: { blockReason?: string };
       candidates?: Array<{
         content?: { parts?: Array<{ text?: string }> };
@@ -101,8 +96,9 @@ export async function POST(req: Request) {
     };
 
     if (!res.ok) {
-      const msg = data.error?.message ?? `Gemini HTTP ${res.status}`;
-      return NextResponse.json({ error: msg }, { status: 502 });
+      const raw = data.error?.message ?? `Gemini HTTP ${res.status}`;
+      const { message, status } = userMessageFromGeminiApiError(raw, res.status, data.error?.code);
+      return NextResponse.json({ error: message }, { status });
     }
 
     const blockReason = data.promptFeedback?.blockReason;

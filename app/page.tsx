@@ -59,7 +59,7 @@ function TournamentApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070d18] text-white p-4 md:p-8 pb-24">
+    <div className="min-h-screen bg-[#070d18] text-white px-4 pt-4 md:px-8 md:pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
       <div className="max-w-6xl mx-auto">
         <TournamentHeader />
         <FirebaseEnvDiagnostics />

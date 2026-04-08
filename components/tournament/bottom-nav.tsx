@@ -17,7 +17,7 @@ const tabs: { id: TabId; label: string; icon: typeof Calendar }[] = [
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#0a1628]/95 backdrop-blur-lg border-t border-cyan-500/30 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a1628]/95 backdrop-blur-lg border-t border-cyan-500/30 pb-[env(safe-area-inset-bottom,0px)]">
       <div className="max-w-lg mx-auto flex justify-around py-2">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button

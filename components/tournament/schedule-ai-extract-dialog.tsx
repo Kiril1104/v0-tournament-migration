@@ -251,7 +251,7 @@ export function ScheduleAiExtractDialog({
               <Button
                 type="button"
                 variant="secondary"
-                className="w-full"
+                className="h-11 w-full font-semibold"
                 disabled={extractBusy}
                 onClick={() => void runExtract()}
               >
@@ -272,9 +272,9 @@ export function ScheduleAiExtractDialog({
 
           {draft && (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <p className="text-sm text-cyan-200/90">Передогляд — перевірте та за потреби відредагуйте поля в таблиці.</p>
-                <Button type="button" variant="outline" size="sm" onClick={startOverPreview}>
+                <Button type="button" variant="outline" size="sm" className="shrink-0 sm:ml-auto" onClick={startOverPreview}>
                   Почати спочатку
                 </Button>
               </div>
@@ -327,13 +327,13 @@ export function ScheduleAiExtractDialog({
           {error && <p className="text-destructive text-sm">{error}</p>}
         </div>
 
-        <div className="flex gap-2 justify-end pt-2 border-t border-border shrink-0">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={importBusy}>
+        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border pt-3 sm:flex-row sm:justify-end sm:gap-3">
+          <Button type="button" variant="outline" className="h-10 w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={importBusy}>
             Закрити
           </Button>
           <Button
             type="button"
-            className="bg-cyan-500 text-[#0a1628] font-bold hover:bg-cyan-400"
+            className="h-10 w-full bg-cyan-500 font-bold text-[#0a1628] hover:bg-cyan-400 sm:min-w-[11rem] sm:w-auto"
             disabled={importBusy || !importReady || extractBusy}
             onClick={() => void runImport()}
           >

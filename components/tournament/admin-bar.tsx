@@ -319,134 +319,142 @@ export function AdminBar({ activeTab }: AdminBarProps) {
     URL.revokeObjectURL(url);
   };
 
+  const adminSecondaryBtn =
+    'inline-flex w-full min-h-[2.75rem] items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-[#0d1f35] px-2 py-2 text-center text-xs font-bold text-cyan-300 transition-all duration-300 hover:bg-cyan-500/10 sm:min-h-[2.5rem] sm:px-3 sm:text-sm';
+
   return (
     <>
-      <div className="flex flex-col gap-3 mb-6">
-        <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={handleAdminToggle}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 border ${
-            isAdmin
-              ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
-              : 'bg-[#0d1f35] text-gray-400 border-cyan-500/20 hover:text-cyan-300 hover:border-cyan-500/40'
-          }`}
-        >
-          {isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
-          {isAdmin ? 'Admin Mode' : 'Viewer Mode'}
-        </button>
+      <div className="mb-6 flex flex-col gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
+          <button
+            type="button"
+            onClick={handleAdminToggle}
+            className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
+              isAdmin
+                ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
+                : 'border-cyan-500/20 bg-[#0d1f35] text-gray-400 hover:border-cyan-500/40 hover:text-cyan-300'
+            }`}
+          >
+            {isAdmin ? <Shield size={16} /> : <ShieldOff size={16} />}
+            {isAdmin ? 'Admin Mode' : 'Viewer Mode'}
+          </button>
 
-        {activeTab === 'standings' && isAdmin && (
-          <div className="flex flex-col gap-1">
-            <button
-              type="button"
-              onClick={() => deferInteraction(() => startTransition(() => openAddGroupDialog()))}
-              className="flex items-center gap-2 bg-cyan-500 text-[#0a1628] px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-400 transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
-            >
-              <Plus size={16} /> Додати групу
-            </button>
-            {addGroupBarHint && <p className="text-amber-300 text-xs max-w-[220px]">{addGroupBarHint}</p>}
-          </div>
-        )}
+          {activeTab === 'standings' && isAdmin && (
+            <div className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-xs">
+              <button
+                type="button"
+                onClick={() => deferInteraction(() => startTransition(() => openAddGroupDialog()))}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-bold text-[#0a1628] shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all duration-300 hover:bg-cyan-400 sm:w-auto"
+              >
+                <Plus size={16} /> Додати групу
+              </button>
+              {addGroupBarHint && <p className="text-xs text-amber-300">{addGroupBarHint}</p>}
+            </div>
+          )}
+        </div>
 
         {isAdmin && (
-          <div className="flex flex-wrap gap-2 flex-1 min-w-0 justify-start sm:justify-end">
-            <button
-              type="button"
-              onClick={() =>
-                deferInteraction(() => {
-                  startTransition(() => setShowMigrationDialog(true));
-                })
-              }
-              className="flex items-center gap-2 bg-[#0d1f35] text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-500/10 transition-all duration-300"
-            >
-              Migrate legacy data
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                deferInteraction(() => {
-                  startTransition(() => setShowImportDialog(true));
-                })
-              }
-              className="flex items-center gap-2 bg-[#0d1f35] text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-500/10 transition-all duration-300"
-            >
-              <Upload size={16} /> Import
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                deferInteraction(() => {
-                  startTransition(() => setShowAiExtractDialog(true));
-                })
-              }
-              className="flex items-center gap-2 bg-[#0d1f35] text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-500/10 transition-all duration-300"
-            >
-              <Sparkles size={16} /> AI з тексту
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                deferInteraction(() => {
-                  startTransition(() => {
-                    setDeleteCategoryError('');
-                    setDeleteCategoryBusy(false);
-                    setDeleteCategoryId('');
-                    setShowDeleteCategoryDialog(true);
+          <div className="rounded-xl border border-cyan-500/25 bg-[#0a1628]/50 p-2 sm:p-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              <button
+                type="button"
+                onClick={() =>
+                  deferInteraction(() => {
+                    startTransition(() => setShowMigrationDialog(true));
+                  })
+                }
+                className={adminSecondaryBtn}
+              >
+                Migrate legacy
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  deferInteraction(() => {
+                    startTransition(() => setShowImportDialog(true));
+                  })
+                }
+                className={adminSecondaryBtn}
+              >
+                <Upload size={16} className="shrink-0" />
+                Import
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  deferInteraction(() => {
+                    startTransition(() => setShowAiExtractDialog(true));
+                  })
+                }
+                className={adminSecondaryBtn}
+              >
+                <Sparkles size={16} className="shrink-0" />
+                <span className="leading-tight">AI розклад</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  deferInteraction(() => {
+                    startTransition(() => {
+                      setDeleteCategoryError('');
+                      setDeleteCategoryBusy(false);
+                      setDeleteCategoryId('');
+                      setShowDeleteCategoryDialog(true);
+                    });
+                  })
+                }
+                className={adminSecondaryBtn}
+              >
+                <span className="leading-tight">Видалити категорію</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  deferInteraction(() => {
+                    startTransition(() => {
+                      setEditCategoryError('');
+                      setEditCategoryBusy(false);
+                      setShowEditCategoryDialog(true);
+                    });
+                  })
+                }
+                className={adminSecondaryBtn}
+              >
+                <span className="leading-tight">Змінити категорію</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deferInteraction(() => {
+                    startTransition(() => {
+                      setPlayoffBusy(true);
+                      setAutomationError('');
+                    });
+                    void (async () => {
+                      try {
+                        const template =
+                          categoryConfig?.format === 'groups_quarterfinals'
+                            ? 'groups_quarterfinals'
+                            : categoryConfig?.format === 'groups_semifinals'
+                              ? 'groups_semifinals'
+                              : 'round_robin';
+                        await generatePlayoffTemplate(template, { clearPlayoff: true });
+                      } catch (e) {
+                        setAutomationError(e instanceof Error ? e.message : 'Failed to generate playoff.');
+                      } finally {
+                        startTransition(() => setPlayoffBusy(false));
+                      }
+                    })();
                   });
-                })
-              }
-              className="flex items-center gap-2 bg-[#0d1f35] text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-500/10 transition-all duration-300"
-            >
-              Delete Category
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                deferInteraction(() => {
-                  startTransition(() => {
-                    setEditCategoryError('');
-                    setEditCategoryBusy(false);
-                    setShowEditCategoryDialog(true);
-                  });
-                })
-              }
-              className="flex items-center gap-2 bg-[#0d1f35] text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-500/10 transition-all duration-300"
-            >
-              Edit Category
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const template =
-                  categoryConfig?.format === 'groups_quarterfinals'
-                    ? 'groups_quarterfinals'
-                    : categoryConfig?.format === 'groups_semifinals'
-                      ? 'groups_semifinals'
-                      : 'round_robin';
-                deferInteraction(() => {
-                  startTransition(() => {
-                    setPlayoffBusy(true);
-                    setAutomationError('');
-                  });
-                  void (async () => {
-                    try {
-                      await generatePlayoffTemplate(template, { clearPlayoff: true });
-                    } catch (e) {
-                      setAutomationError(e instanceof Error ? e.message : 'Failed to generate playoff.');
-                    } finally {
-                      startTransition(() => setPlayoffBusy(false));
-                    }
-                  })();
-                });
-              }}
-              className="flex items-center gap-2 bg-[#0d1f35] text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-cyan-500/10 transition-all duration-300"
-            >
-              <GitBranch size={16} /> {playoffBusy ? 'Generating...' : 'Generate Playoff'}
-            </button>
+                }}
+                className={adminSecondaryBtn}
+              >
+                <GitBranch size={16} className="shrink-0" />
+                <span className="leading-tight">{playoffBusy ? 'Генерую…' : 'Плей-оф'}</span>
+              </button>
+            </div>
           </div>
         )}
-        </div>
       </div>
 
       <Dialog open={showAddGroupDialog} onOpenChange={setShowAddGroupDialog}>
@@ -507,49 +515,56 @@ export function AdminBar({ activeTab }: AdminBarProps) {
               />
               Replace existing data for the imported age category
             </label>
-            <div className="flex flex-wrap gap-2 items-center justify-between">
-              <select
-                className="px-3 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground"
-                value={categoryConfig?.format ?? 'round_robin'}
-                disabled={formatBusy}
-                onChange={(e) => {
-                  const value = e.target.value as 'round_robin' | 'groups_semifinals' | 'groups_quarterfinals';
-                  startTransition(() => {
-                    setFormatBusy(true);
-                    setAutomationError('');
-                  });
-                  deferInteraction(() => {
-                    void (async () => {
-                      try {
-                        await setCategoryFormat(value);
-                      } catch (err) {
-                        setAutomationError(err instanceof Error ? err.message : 'Failed to update format.');
-                      } finally {
-                        startTransition(() => setFormatBusy(false));
-                      }
-                    })();
-                  });
-                }}
-              >
-                <option value="round_robin">Round-robin only</option>
-                <option value="groups_semifinals">2 groups + semifinals</option>
-                <option value="groups_quarterfinals">4 groups + quarterfinals</option>
-              </select>
-              <Button type="button" variant="outline" onClick={downloadTemplate}>
-                Download template
-              </Button>
-              <label className="text-sm text-muted-foreground">
-                <input
-                  type="file"
-                  accept="application/json,.json,.xlsx,.xls"
-                  disabled={importBusy}
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <div className="grid gap-1.5">
+                <span className="text-xs text-muted-foreground">Формат турніру</span>
+                <select
+                  className="h-10 w-full rounded-lg border border-border bg-secondary px-3 text-sm text-foreground"
+                  value={categoryConfig?.format ?? 'round_robin'}
+                  disabled={formatBusy}
                   onChange={(e) => {
-                    const f = e.target.files?.[0] ?? null;
-                    handleImportFile(f);
-                    e.target.value = '';
+                    const value = e.target.value as 'round_robin' | 'groups_semifinals' | 'groups_quarterfinals';
+                    startTransition(() => {
+                      setFormatBusy(true);
+                      setAutomationError('');
+                    });
+                    deferInteraction(() => {
+                      void (async () => {
+                        try {
+                          await setCategoryFormat(value);
+                        } catch (err) {
+                          setAutomationError(err instanceof Error ? err.message : 'Failed to update format.');
+                        } finally {
+                          startTransition(() => setFormatBusy(false));
+                        }
+                      })();
+                    });
                   }}
-                />
-              </label>
+                >
+                  <option value="round_robin">Round-robin only</option>
+                  <option value="groups_semifinals">2 groups + semifinals</option>
+                  <option value="groups_quarterfinals">4 groups + quarterfinals</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-2 sm:items-stretch">
+                <Button type="button" variant="outline" className="h-10 w-full sm:w-auto" onClick={downloadTemplate}>
+                  Download template
+                </Button>
+                <label className="flex h-10 cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-secondary/50 px-3 text-sm text-muted-foreground transition hover:bg-secondary">
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept="application/json,.json,.xlsx,.xls"
+                    disabled={importBusy}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      handleImportFile(f);
+                      e.target.value = '';
+                    }}
+                  />
+                  {importBusy ? 'Обробка…' : 'Обрати файл'}
+                </label>
+              </div>
             </div>
             {importError && <p className="text-destructive text-sm">{importError}</p>}
             {importPreview && (
@@ -565,13 +580,13 @@ export function AdminBar({ activeTab }: AdminBarProps) {
               </div>
             )}
             {automationError && <p className="text-destructive text-sm">{automationError}</p>}
-            <div className="flex gap-2 justify-end">
-              <Button type="button" variant="outline" onClick={() => setShowImportDialog(false)} disabled={importBusy}>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+              <Button type="button" variant="outline" className="h-10 w-full sm:w-auto" onClick={() => setShowImportDialog(false)} disabled={importBusy}>
                 Close
               </Button>
               <Button
                 type="button"
-                className="bg-cyan-500 text-[#0a1628] font-bold hover:bg-cyan-400"
+                className="h-10 w-full bg-cyan-500 font-bold text-[#0a1628] hover:bg-cyan-400 sm:min-w-[10rem] sm:w-auto"
                 disabled={importBusy || !parsedImport || Boolean(importPreview?.issues.length)}
                 onClick={() => {
                   if (!parsedImport) return;

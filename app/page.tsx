@@ -11,15 +11,19 @@ import { BusesSection } from '@/components/tournament/buses-section';
 import { HotelsSection } from '@/components/tournament/hotels-section';
 import type { TabId } from '@/types/tournament';
 import { TournamentAssistant } from '@/components/assistant/tournament-assistant';
+import { CornerBrandLogos } from '@/components/tournament/corner-brand-logos';
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center space-y-3">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-muted-foreground text-sm">Loading tournament...</p>
+    <>
+      <CornerBrandLogos />
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 pt-[calc(5rem+env(safe-area-inset-top,0px))] pb-8">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground text-sm">Loading tournament...</p>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -59,7 +63,9 @@ function TournamentApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070d18] text-white px-4 pt-4 md:px-8 md:pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
+    <>
+      <CornerBrandLogos />
+      <div className="min-h-screen bg-[#070d18] text-white px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-[calc(5.25rem+env(safe-area-inset-top,0px))] md:px-8 md:pt-[calc(6rem+env(safe-area-inset-top,0px))]">
       <div className="max-w-6xl mx-auto">
         <TournamentHeader />
         <FirebaseEnvDiagnostics />
@@ -87,6 +93,7 @@ function TournamentApp() {
       <BottomNav active={activeTab} onChange={setActiveTab} />
       <TournamentAssistant activeTab={activeTab} />
     </div>
+    </>
   );
 }
 

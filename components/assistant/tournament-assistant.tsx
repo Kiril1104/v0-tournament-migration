@@ -91,7 +91,8 @@ export function TournamentAssistant({ activeTab }: { activeTab: TabId }) {
         <MessageCircle className="size-4 opacity-80 sm:hidden" />
       </button>
 
-      <Sheet open={open} onOpenChange={setOpen}>
+      {/* modal={false}: не блокуємо прокрутку фону (Radix інакше ставить overflow:hidden на body). */}
+      <Sheet modal={false} open={open} onOpenChange={setOpen}>
         <SheetContent
           side="right"
           className="w-full sm:max-w-md border-cyan-500/20 bg-[#0a1628] text-white flex flex-col p-0 gap-0 [&>button]:text-gray-300 [&>button]:hover:text-white"

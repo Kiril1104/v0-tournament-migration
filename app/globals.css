@@ -121,8 +121,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Довгий контент має прокручуватись на document; Radix modal інколи лишає overflow:hidden на body. */
+  html {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
 }
 

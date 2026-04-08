@@ -13,9 +13,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'FUTURESTARS CUPS - Tournament Manager',
-  description: 'Youth Soccer Tournament Management System',
-  generator: 'v0.app',
+  title: {
+    default: 'Futurestars_cups',
+    template: '%s | Futurestars_cups',
+  },
+  description: 'Futurestars_cups — юнацькі футбольні турніри: розклад, групи, таблиці.',
+  generator: 'Next.js',
   icons: {
     icon: [
       {
@@ -41,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="h-auto min-h-0">
+    <html lang="uk" className="h-auto min-h-0">
       <body className="font-sans antialiased min-h-dvh">
         {children}
         <Analytics />

@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Write failed';
     const isServerConfig =
-      /Ключ service account|FIREBASE_SERVICE_ACCOUNT_JSON|FIREBASE_SERVICE_ACCOUNT_PATH|Service account JSON invalid|valid JSON|credential|Could not load|file not found|Додайте ключ/i.test(
+      /Ключ service account|FIREBASE_SERVICE_ACCOUNT_JSON_B64|FIREBASE_SERVICE_ACCOUNT_JSON|FIREBASE_SERVICE_ACCOUNT_PATH|Service account JSON invalid|valid JSON|credential|Could not load|file not found|Додайте ключ/i.test(
         message,
       );
     return NextResponse.json({ error: message }, { status: isServerConfig ? 503 : 400 });

@@ -15,6 +15,32 @@ function readServiceAccountFile(relOrAbs: string): string {
   return readFileSync(resolved, 'utf8').trim();
 }
 
+/** Рядок схожий на base64 без JSON-об’єкта (лапки в Vercel часто ламають перевірку). */
+function looksLikeBase64Payload(s: string): boolean {
+  const compact = s.replace(/\s/g, '');
+  return compact.length >= 80 && /^[A-Za-z0-9+/=_-]+$/.test(compact) && !compact.includes('{');
+}
+
+/** З буфера обміну часто потрапляють зайві символи — лишаємо лише алфавіт base64. */
+function onlyBase64Alphabet(s: string): string {
+  return s.replace(/[^A-Za-z0-9+/=_-]/g, '');
+}
+
+/** Кандидати для декоду: цілий рядок і довгі токени (без префіксів на кшталт «Варіант B:»). */
+function base64DecodeCandidates(s: string): string[] {
+  const t = normalizeServiceAccountJsonString(s);
+  const out: string[] = [];
+  const push = (x: string) => {
+    const c = onlyBase64Alphabet(x);
+    if (c.length >= 80 && !c.includes('{')) out.push(c);
+  };
+  push(t);
+  for (const part of t.split(/[\s,;|]+/)) {
+    if (part.length >= 40) push(part);
+  }
+  return [...new Set(out)];
+}
+
 /** BOM, зайві лапки навколо всього JSON у .env — часта причина невалідного JSON. */
 function normalizeServiceAccountJsonString(s: string): string {
   let t = s.trim();
@@ -24,18 +50,49 @@ function normalizeServiceAccountJsonString(s: string): string {
   if (t.length >= 2 && t.startsWith("'") && t.endsWith("'") && t.includes('{')) {
     t = t.slice(1, -1).trim();
   }
+  // Подвійні лапки навколо JSON-об’єкта
+  if (t.length >= 4 && t.startsWith('"') && t.endsWith('"') && t.slice(1, -1).trim().startsWith('{')) {
+    t = t.slice(1, -1).trim();
+  }
+  // Те саме навколо base64: всередині немає "{" на початку — раніше лапки не знімались і base64 ламався
+  else if (t.length >= 4 && t.startsWith('"') && t.endsWith('"')) {
+    const inner = t.slice(1, -1).trim();
+    if (looksLikeBase64Payload(inner)) {
+      t = inner;
+    }
+  }
   return t;
 }
 
-/** Парсить JSON ключа; підтримує випадок, коли в .env усе значення — JSON-рядок з об'єктом всередині. */
-function tryParseServiceAccountJson(raw: string): Record<string, unknown> | null {
+function looksLikeBase64Only(s: string): boolean {
+  return looksLikeBase64Payload(s);
+}
+
+/** Парсить JSON ключа; підтримує JSON-рядок з об'єктом всередині та base64(Vercel без «лапкового пекла»). */
+function tryParseServiceAccountJson(raw: string, decodeDepth = 0): Record<string, unknown> | null {
+  if (decodeDepth > 4) return null;
+
   const s = normalizeServiceAccountJsonString(raw);
   let parsed: unknown;
+
   try {
     parsed = JSON.parse(s);
   } catch {
+    if (looksLikeBase64Only(s)) {
+      const compact = s.replace(/\s/g, '');
+      for (const enc of ['base64', 'base64url'] as const) {
+        try {
+          const decoded = Buffer.from(compact, enc).toString('utf8');
+          const nested = tryParseServiceAccountJson(decoded, decodeDepth + 1);
+          if (nested) return nested;
+        } catch {
+          /* пробуємо наступне кодування */
+        }
+      }
+    }
     return null;
   }
+
   if (typeof parsed === 'string') {
     const inner = parsed.trim();
     if (!inner.startsWith('{')) return null;
@@ -79,6 +136,12 @@ function loadServiceAccountCreds(): Record<string, unknown> {
     pushFile(DEFAULT_SERVICE_ACCOUNT_FILE, `${DEFAULT_SERVICE_ACCOUNT_FILE} (корінь проєкту, авто)`);
   }
 
+  /** Окрема змінна лише для base64 — зручно для Vercel (без плутанини з JSON). */
+  const inlineB64Only = process.env.FIREBASE_SERVICE_ACCOUNT_JSON_B64?.trim();
+  if (inlineB64Only) {
+    attempts.push({ label: 'FIREBASE_SERVICE_ACCOUNT_JSON_B64', raw: inlineB64Only });
+  }
+
   const inline = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (inline) {
     attempts.push({ label: 'FIREBASE_SERVICE_ACCOUNT_JSON', raw: inline });
@@ -100,7 +163,7 @@ function loadServiceAccountCreds(): Record<string, unknown> {
   }
 
   throw new Error(
-    `Ключ service account не підійшов: ${errors.join(' | ')} Локально: покладіть свіжий JSON як service-account.json у корінь і приберіть або виправте FIREBASE_SERVICE_ACCOUNT_JSON у .env.local. На Vercel — один рядок JSON у змінній без переносів.`,
+    `Ключ service account не підійшов: ${errors.join(' | ')} Локально: service-account.json у корінь. На Vercel: npm run firebase:env-one-line → base64 у FIREBASE_SERVICE_ACCOUNT_JSON_B64 (рекомендовано) або JSON у FIREBASE_SERVICE_ACCOUNT_JSON, Redeploy.`,
   );
 }
 
